@@ -1,18 +1,20 @@
 
-cd %~dp0
+@echo off
+set base_path=%~dp0
+set src_path=%~dp0\src
+set nodes_path=%~dp0\nodes
+set nodes=%~dp0\nodes.txt
 
-for %%I in (*.erl) do start /wait erlc %%I
-
-if not exist ".\aa" (md aa)
-if not exist ".\bb" (md bb)
-
-for %%I in (*.beam) do ( 
-	copy %%I "aa\" 
-	copy %%I "bb\" 
+if not exist %nodes_path% mkdir %nodes_path%
+cd %nodes_path%
+for	/f "skip=1 delims=" %%I in (%nodes%) do (
+	if not exist %%I mkdir %%I
 )
-for %%I in (*.hrl) do ( 
-	copy %%I "aa\" 
-	copy %%I "bb\"
+
+cd %src_path%
+for %%f in (*.erl) do start /wait erlc %%f
+for %%f in (*.beam) do ( 
+	for	/f "skip=1 delims=" %%d in (%nodes%) do xcopy %src_path%\%%f %nodes_path%\%%d
 )
 
 if errorlevel 1 goto error_end
@@ -23,10 +25,14 @@ echo "执行错误"
 pause
 
 :normal_end
-for %%I in (*.beam) do del %%I
-cd aa 
-start werl -sname aa -mnesia dir "online"
-cd ../bb
-start werl -sname bb -mnesia dir "online"
+for %%f in (*.beam) do del %%f
+cd %nodes_path%
+for	/f "skip=1 delims=" %%I in (%nodes%) do (
+	cd %%I
+	echo cd %nodes_path%\%%I > start_%%I_node.bat 
+	echo start werl -name %%I@127.0.0.1 -mnesia dir "mnesia_db" >> start_%%I_node.bat 
+	start cmd /c start_%%I_node.bat
+	cd ..
+)
 echo "执行成功"
 pause

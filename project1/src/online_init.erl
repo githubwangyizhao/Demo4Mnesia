@@ -1,7 +1,7 @@
 
 -module(online_init).
 
--include("online.hrl").
+-include("../include/online.hrl").
 -export([init/0]).
 
 init() ->

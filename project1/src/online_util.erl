@@ -1,8 +1,9 @@
 
 -module(online_util).
 
--include("online.hrl").
+-include("../include/online.hrl").
 -export([add/2, find/1, del/2, select/1]).
+-export([join_cluster_mnesia/1]).
 
 add(Who, Pid) ->
     F = fun() ->
@@ -30,3 +31,12 @@ select(Who) ->
             io:format("find result, ~p~n", [mnesia:select(chat, [{Chat, [], ['$1']}])])
         end,
     mnesia:transaction(F).
+
+%% 加入集群
+join_cluster_mnesia(Node) ->
+    io:format("join cluster mnesia begin...~n"),
+    mnesia:change_config(extra_db_nodes, [Node]),
+    [mnesia:add_table_copy(Table, node(), ram_copies) || Table <- ?MNESIA_TABLE_LIST],
+    mnesia:wait_for_tables(?MNESIA_TABLE_LIST, 120*1000),
+    io:format("join cluster mnesia finish...~n"),
+    ok.

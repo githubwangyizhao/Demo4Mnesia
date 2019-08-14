@@ -2,9 +2,9 @@
 
 ==***用例1***== 【/project1】
 说明：mnesia启动为内存存储模式，涉及集群部署。 
-1.运行用例中的project1/run.bat文件。启动两个临时节点aa和bb
+1.运行用例中的project1/run.bat文件。启动节点aa、bb和cc
 2.第一次启动mnesia的时候，在aa或bb点，输入：
-    mnesia:create_schema(['aa@localhost', 'bb@localhost']),
+    mnesia:create_schema(['aa@127.0.0.1', 'bb@127.0.0.1']).
     返回ok
     1).schema只能创建一次
     2).实际上，每个节点毒保存一份schema拷贝
@@ -34,11 +34,17 @@
         宕掉aa点
     2).bb点输入:    
         online_util:select("bob").        
-       [需验证：mnesia数据库依旧存在。]
-    3).运行用例中的project1/restart_aa.bat文件, 重启aa, 输入：       
+       [可证明：mnesia数据库依旧存在。]
+    3).运行用例中的project1/nodes/aa/start_aa_nodes.bat文件, 重启aa, 输入：       
         mnesia:start().
         online_util:select("bob").
-       [需验证：mnesia数据库，从bb点同步到aa点，数据依旧存在。]
+       [可证明：mnesia数据库，从bb点同步到aa点，数据依旧存在。]
+5.给已有的mnesia集群添加节点cc
+	1).	cc点输入：
+		mnesia:start().
+		online_util:join_cluster_mnesia('aa@127.0.0.1').
+		online_util:find("bob"). 
+		[可证明：cc已加入集群。]
 
 ==***用例2***== 【/project2】      
 说明：Mnesia数据库如何实现SQL查询。
